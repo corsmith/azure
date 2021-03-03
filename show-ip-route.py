@@ -1,8 +1,13 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import ipaddress, json, operator, pprint, sys
 
-host = ipaddress.ip_address(sys.argv[1])
+host = False
+if len(sys.argv) == 2:
+    try:
+        host = ipaddress.ip_address(sys.argv[1])
+    except:
+        sys.exit(f'invalid ip address: {sys.argv[1]}')
 
 data = json.loads(sys.stdin.read())['value']
 '''
@@ -23,7 +28,11 @@ for r in data:
 
 best = False
 for row in sorted(data, key=lambda r: r['prefix']):
-    if host in row['prefix']:
-        best = row
+    if host:
+        if host in row['prefix']:
+            best = row
+    else:
+        pprint.pprint(row)
 
-pprint.pprint(best)
+if host:
+    pprint.pprint(best)
