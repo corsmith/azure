@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import argparse, ipaddress, json, operator, pprint, sys
+import argparse, ipaddress, json, sys, tabulate
 
 parser = argparse.ArgumentParser()
 parser.add_argument('ip', nargs='?', default=False)
@@ -13,29 +13,22 @@ if args.ip:
         sys.exit(f'invalid ip address: {args.ip}')
 
 data = json.loads(sys.stdin.read())['value']
-'''
- {'addressPrefix': ['192.168.0.0/16'],
-  'destinationServiceTags': [],
-  'disableBgpRoutePropagation': False,
-  'hasBgpOverride': False,
-  'name': None,
-  'nextHopIpAddress': [],
-  'nextHopType': 'None',
-  'source': 'Default',
-  'state': 'Active',
-  'tagMap': {}},
-'''
+
+headers = [ k for k in data[0].keys() ] # make a copy
+rtable = []
 
 for r in data:
     r['prefix'] = ipaddress.ip_network(r['addressPrefix'][0])
 
-best = False
 for row in sorted(data, key=lambda r: r['prefix']):
     if args.ip:
         if args.ip in row['prefix']:
-            best = row
+            rtable = [ row ]
     else:
-        pprint.pprint(row)
+        rtable.append(row)
 
-if args.ip:
-    pprint.pprint(best)
+cooked = []
+for row in rtable:
+    cooked.append([ f'{ row[header] }' for header in headers ])
+
+print(tabulate.tabulate(cooked, headers=headers))
